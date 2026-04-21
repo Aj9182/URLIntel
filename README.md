@@ -2,6 +2,8 @@
 
 URLIntel is an AI-powered security dashboard that analyzes URLs for phishing, malware, and other threats. It leverages a combination of Machine Learning (XGBoost) and external intelligence APIs to provide a comprehensive threat score and detailed analysis for any given URL.
 
+![image alt](https://github.com/Aj9182/URLIntel/blob/894d8a3e1dd78436228e94f17e531507d5c6dd46/Screenshot%202026-04-21%20184313.png)
+
 ## Features
 
 - **Machine Learning Analysis**: Uses a trained XGBoost model to predict phishing probabilities based on extracted URL features.

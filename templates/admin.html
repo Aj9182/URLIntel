@@ -243,6 +243,15 @@ transition: opacity 0.3s ease;
   .nav-hamburger { display: flex; }
   .nav-links-desktop { display: none !important; }
 }
+
+/* ===== ADMIN CONTENT RESPONSIVE ===== */
+@media (max-width: 640px) {
+  .admin-table { font-size: 12px; }
+  .admin-table th, .admin-table td { padding: 6px 8px; }
+  .url-cell { max-width: 130px !important; }
+  .action-form { flex-direction: column; gap: 4px; }
+  .btn { padding: 4px 8px; font-size: 11px; width: 100%; }
+}
 </style>
 
 </head>
@@ -290,7 +299,7 @@ transition: opacity 0.3s ease;
 </nav>
 
 <!-- ================= MAIN CONTAINER ================= -->
-<div class="max-w-7xl mx-auto px-6 mt-10 space-y-10">
+<div class="max-w-7xl mx-auto px-3 md:px-6 mt-8 md:mt-10 space-y-8 md:space-y-10">
 
 <!-- ================= STATS ================= -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -319,9 +328,9 @@ transition: opacity 0.3s ease;
 
 <!-- ================= CHART ================= -->
 <div class="flex justify-center">
-<div class="glass p-6 rounded-xl w-[320px] text-center">
+<div class="glass p-6 rounded-xl w-full max-w-[320px] text-center">
 <h2 class="text-lg mb-4">Threat Distribution</h2>
-<canvas id="chart" width="220" height="220"></canvas>
+<canvas id="chart" style="max-width:100%"></canvas>
 </div>
 </div>
 
@@ -337,7 +346,7 @@ Download PDF
 </div>
 
 <!-- ================= TABLE ================= -->
-<div class="glass no-hover p-6 rounded-xl">
+<div class="glass no-hover p-3 md:p-6 rounded-xl">
 
 <h2 class="text-xl mb-4">Scan History</h2>
 <p>Total scans: {{ scans|length }}</p>
@@ -423,7 +432,8 @@ data: {
   }]
 },
     options: {
-      responsive: false,
+      responsive: true,
+      maintainAspectRatio: true,
       plugins: {
         legend: {
           labels: {

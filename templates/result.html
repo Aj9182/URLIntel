@@ -132,6 +132,49 @@ background-image:
 linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px),
 linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px);
 }
+
+/* ===== MOBILE HAMBURGER NAV ===== */
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 6px;
+  background: none;
+  border: none;
+  color: inherit;
+}
+.nav-hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+.nav-menu-mobile {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 16px 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.nav-menu-mobile.open { display: flex; }
+
+/* ===== CONTENT RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .nav-hamburger { display: flex; }
+  .nav-links-desktop { display: none !important; }
+}
+@media (max-width: 640px) {
+  .result-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .action-btns { flex-direction: column; gap: 8px; }
+  .action-btns button { width: 100%; justify-content: center; }
+  .modal-inner { margin: 1rem; width: calc(100% - 2rem) !important; max-width: none !important; }
+  .security-btns { flex-wrap: wrap; gap: 8px; }
+  .security-btns button { margin: 0 !important; }
+}
 </style>
 </head>
 
@@ -142,87 +185,59 @@ linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px);
 <!-- GRID -->
 <div class="grid-overlay"></div>
 <!-- NAVBAR -->
-<nav class="fixed top-0 w-full z-50 glass flex justify-between items-center px-10 py-4">
+<nav class="fixed top-0 w-full z-50 glass" id="mainNav">
+  <div class="flex justify-between items-center px-6 py-4">
+    <!-- LOGO -->
+    <div class="flex items-center gap-3">
+      <img src="{{ url_for('static', filename='url1.png') }}" class="w-8 h-8">
+      <span class="text-xl font-bold text-black dark:text-white">URLIntel</span>
+    </div>
 
-  <!-- LOGO -->
-  <div class="flex items-center gap-3">
-    <img src="{{ url_for('static', filename='url1.png') }}" class="w-8 h-8">
-    <span class="text-xl font-bold text-black dark:text-white">URLIntel</span>
+    <div class="flex items-center gap-2">
+      <!-- NAV LINKS (desktop) -->
+      <div class="nav-links-desktop flex items-center gap-2 bg-white/40 dark:bg-white/10 backdrop-blur-md p-1 rounded-xl">
+        <a href="/" class="px-4 py-2 rounded-lg font-medium transition hover:bg-gray-200 dark:hover:bg-white/20 text-black dark:text-white">Home</a>
+        <a href="/scan" class="px-4 py-2 rounded-lg bg-white text-black dark:bg-white dark:text-black font-medium transition">Result</a>
+        <a href="/history" class="px-4 py-2 rounded-lg font-medium transition hover:bg-gray-200 dark:hover:bg-white/20 text-black dark:text-white">History</a>
+        <a href="/admin" class="px-4 py-2 rounded-lg font-medium transition hover:bg-gray-200 dark:hover:bg-white/20 text-black dark:text-white">Admin</a>
+      </div>
+
+      <!-- THEME BUTTON -->
+      <button onclick="toggleTheme()" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-slate-800 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-10h-1M4.34 12h-1m15.36 6.36l-.7-.7M6.34 6.34l-.7-.7m12.02 0l-.7.7M6.34 17.66l-.7.7M12 7a5 5 0 100 10 5 5 0 000-10z"/>
+        </svg>
+      </button>
+
+      <!-- HAMBURGER (mobile only) -->
+      <button class="nav-hamburger text-black dark:text-white" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
   </div>
 
-<!-- NAV MENU -->
-<div class="flex items-center gap-2 bg-white/40 dark:bg-white/10 backdrop-blur-md p-1 rounded-xl">
-
-    <a href="/"
-       class="px-4 py-2 rounded-lg
-              font-medium
-              transition
-              hover:bg-gray-200 dark:hover:bg-white/20
-              text-black dark:text-white">
-      Home
-    </a>
-
-    <a href="/scan"
-       class="px-4 py-2 rounded-lg
-              bg-white text-black dark:bg-white dark:text-black
-              font-medium
-              transition
-              hover:bg-gray-200 dark:hover:bg-white/20">
-      Result
-    </a>
-
-    <a href="/history"
-       class="px-4 py-2 rounded-lg
-              font-medium
-              transition
-              hover:bg-gray-200 dark:hover:bg-white/20
-              text-black dark:text-white">
-      History
-    </a>
-        <a href="/admin"
-       class="px-4 py-2 rounded-lg
-              font-medium
-              transition
-              hover:bg-gray-200 dark:hover:bg-white/20
-              text-black dark:text-white">
-      Admin
-    </a>
-
-</div>
-
-</div>
-
-  <!-- THEME BUTTON -->
-  <button onclick="toggleTheme()"
-    class="ml-6 p-2 rounded-lg bg-gray-200 dark:bg-gray-800">
-
-    <svg xmlns="http://www.w3.org/2000/svg"
-      class="w-5 h-5 text-slate-800 dark:text-white"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor">
-
-      <path stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M12 3v1m0 16v1m8.66-10h-1M4.34 12h-1m15.36 6.36l-.7-.7M6.34 6.34l-.7-.7m12.02 0l-.7.7M6.34 17.66l-.7.7M12 7a5 5 0 100 10 5 5 0 000-10z"/>
-
-    </svg>
-
-  </button>
-
+  <!-- MOBILE DROPDOWN MENU -->
+  <div id="mobileMenu" class="nav-menu-mobile">
+    <a href="/" class="block px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/20 transition">Home</a>
+    <a href="/scan" class="block px-4 py-2 rounded-lg bg-white text-black dark:bg-white dark:text-black font-medium">Result</a>
+    <a href="/history" class="block px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/20 transition">History</a>
+    <a href="/admin" class="block px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/20 transition">Admin</a>
+    <button onclick="toggleTheme()" class="text-left px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800 w-full">Toggle Theme</button>
+  </div>
 </nav>
 
 <!-- MAIN CONTENT -->
-<div class="pt-28 px-6 pb-10">
-  <div class="glass max-w-5xl mx-auto p-10 rounded-2xl shadow-2xl">
+<div class="pt-24 px-3 md:px-6 pb-10">
+  <div class="glass max-w-5xl mx-auto p-4 md:p-10 rounded-2xl shadow-2xl">
 
 <!-- HEADER -->
-<div class="flex justify-between items-center mb-8">
-  <h1 class="text-3xl font-bold text-black dark:text-white">URL Security Analysis</h1>
-<span class="text-sm px-3 py-1 rounded-full bg-gray-200 dark:bg-gray-700 dark:text-white shadow-lg dark:shadow-none">
-  AI Risk Assessment Engine
-</span>
+<div class="result-header flex justify-between items-center mb-8">
+  <h1 class="text-xl md:text-3xl font-bold text-black dark:text-white">URL Security Analysis</h1>
+  <span class="text-xs md:text-sm px-3 py-1 rounded-full bg-gray-200 dark:bg-gray-700 dark:text-white shadow-lg dark:shadow-none whitespace-nowrap">
+    AI Risk Assessment Engine
+  </span>
 </div>
 
     <!-- SCANNED URL + BUTTON -->
@@ -239,24 +254,24 @@ linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px);
         Visit Website
       </button>
     </div>
-    <!-- VIEW SECURITY BUTTON -->
-  <button onclick="openSSLModal()"
-  class="-mt-8 px-4 py-2 rounded-lg font-medium transition-all duration-300
-  text-black bg-white shadow-md
-  hover:shadow-xl hover:-translate-y-1 hover:scale-105
-  dark:text-white dark:bg-transparent dark:shadow-none dark:hover:shadow-none">
-  View Security Details
-  </button>
+    <!-- VIEW SECURITY BUTTONS -->
+  <div class="security-btns flex flex-wrap gap-2 mt-4">
+    <button onclick="openSSLModal()"
+    class="px-4 py-2 rounded-lg font-medium transition-all duration-300
+    text-black bg-white shadow-md
+    hover:shadow-xl hover:-translate-y-1 hover:scale-105
+    dark:text-white dark:bg-white/10 dark:shadow-none">
+      View Security Details
+    </button>
 
-  <button onclick="openWhoisModal()"
-  class="-mt-8 ml-3 px-4 py-2 rounded-lg font-medium transition-all duration-300
-  text-black bg-white shadow-md
-  hover:shadow-xl hover:-translate-y-1 hover:scale-105
-  dark:text-white dark:bg-transparent dark:shadow-none">
-
-  View WHOIS Info
-
-</button>
+    <button onclick="openWhoisModal()"
+    class="px-4 py-2 rounded-lg font-medium transition-all duration-300
+    text-black bg-white shadow-md
+    hover:shadow-xl hover:-translate-y-1 hover:scale-105
+    dark:text-white dark:bg-white/10 dark:shadow-none">
+      View WHOIS Info
+    </button>
+  </div>
 <div class="mt-8 p-4 rounded-xl bg-white/70 dark:bg-white/5 backdrop-blur-lg shadow-lg">
 
   <p class="text-gray-800 dark:text-white">
@@ -404,6 +419,10 @@ linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px);
 </div>
 
 <script>
+function toggleMobileMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+
 function handleRedirect() {
   const url = "{{ url }}";
   const threat = {{ threat_score }};
@@ -434,7 +453,9 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let particles = [];
-const count = 80;
+const isMobile = window.innerWidth <= 768;
+const count = isMobile ? 20 : 80;
+const connectDist = isMobile ? 60 : 120;
 
 for(let i=0;i<count;i++){
 
@@ -479,7 +500,7 @@ let dy=particles[i].y-particles[j].y;
 
 let dist=Math.sqrt(dx*dx+dy*dy);
 
-if(dist<120){
+if(dist < connectDist){
 
 ctx.beginPath();
 ctx.moveTo(particles[i].x,particles[i].y);
@@ -515,9 +536,9 @@ function closeWhoisModal(){
 }
 </script>
 <!-- SSL MODAL -->
-<div id="sslModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+<div id="sslModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 px-4">
 
-  <div class="glass p-8 rounded-2xl max-w-md w-full relative">
+  <div class="modal-inner glass p-6 md:p-8 rounded-2xl max-w-md w-full relative">
 
     <!-- CLOSE BUTTON -->
     <button onclick="closeSSLModal()"
@@ -568,9 +589,9 @@ function closeWhoisModal(){
   </div>
 
 </div>
-<div id="whoisModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+<div id="whoisModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 px-4">
 
-  <div class="glass p-8 rounded-2xl max-w-md w-full relative">
+  <div class="modal-inner glass p-6 md:p-8 rounded-2xl max-w-md w-full relative">
 
     <!-- CLOSE BUTTON -->
     <button onclick="closeWhoisModal()"

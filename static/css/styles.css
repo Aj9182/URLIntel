@@ -1,0 +1,186 @@
+/* ================= GLASS EFFECT ================= */
+.glass {
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+/* LIGHT MODE OVERRIDES */
+body:not(.dark) .glass {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #111;
+}
+
+/* DARK MODE OVERRIDES */
+body.dark .glass {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 255, 255, 0.4);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+  color: #fff;
+}
+
+/* DARK MODE CARD OVERRIDES */
+body.dark .card-box {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 0 8px rgba(255, 255, 255, 0.04),
+    0 6px 25px rgba(0, 0, 0, 0.6);
+}
+
+/* HOVER EFFECT */
+.glass:not(.no-hover):hover {
+  transform: translateY(-2px) scale(1.02);
+  transition: transform 0.3s ease;
+}
+.card-box:hover {
+  transform: translateY(-2px) scale(1.03);
+  transition: transform 0.3s;
+}
+.no-hover:hover {
+  transform: none !important;
+  box-shadow: inherit !important;
+}
+
+/* ================= GLASS SHINE ANIMATION ================= */
+.glass::before {
+  content: "";
+  position: absolute;
+  top: -150%;
+  left: -150%;
+  width: 300%;
+  height: 300%;
+  background: linear-gradient(
+    120deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 60%
+  );
+  filter: blur(20px);
+  transform: rotate(25deg);
+  animation: glassMove 10s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes glassMove {
+  0% { transform: translate(-40%, -40%) rotate(25deg); }
+  100% { transform: translate(40%, 40%) rotate(25deg); }
+}
+
+/* ================= GRID BACKGROUND ================= */
+.grid-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: -1;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+}
+
+.dark .grid-overlay {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+}
+
+/* ================= PARTICLES CANVAS ================= */
+#particle-network {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+}
+
+/* ❌ REMOVE FULLSCREEN CANVAS ISSUE FOR ADMIN CHARTS */
+canvas:not(#particle-network) {
+  position: relative !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* ================= TABLE HEADER ================= */
+.table-header {
+  background: linear-gradient(to right, #0f172a, #1e293b);
+}
+
+/* ================= LOADING TEXT FADE ================= */
+#loadingText {
+  transition: opacity 0.3s ease;
+}
+
+/* ================= TYPEWRITER CURSOR ================= */
+@keyframes blinkCursor {
+  0%, 100% { border-right-color: transparent; }
+  50% { border-right-color: #22d3ee; }
+}
+.typing-cursor {
+  border-right: 2px solid #22d3ee;
+  padding-right: 4px;
+  animation: blinkCursor 0.8s infinite;
+}
+
+/* ================= ADMIN SPECIFIC STYLES ================= */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.admin-table th {
+    background: #111;
+    color: #fff;
+    padding: 12px;
+    text-align: left;
+}
+
+.admin-table td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.url-cell {
+    max-width: 300px;
+    word-break: break-all;
+}
+
+.status {
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.status.safe { background: rgba(0,255,0,0.1); color: #00ff88; }
+.status.suspicious { background: rgba(255,165,0,0.1); color: orange; }
+.status.phishing { background: rgba(255,0,0,0.1); color: red; }
+
+.action-form { display: flex; gap: 6px; }
+.btn {
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.2s;
+}
+
+.btn.safe { background: #00c853; color: white; }
+.btn.warn { background: #ff9800; color: white; }
+.btn.danger { background: #ff1744; color: white; }
+
+.btn:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}

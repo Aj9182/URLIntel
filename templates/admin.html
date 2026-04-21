@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+tailwind.config = {
+  darkMode: 'class'
+}
+</script>
+
+<style>
+
+/* ================= GLASS EFFECT ================= */
+.glass{
+backdrop-filter: blur(20px);
+background: rgba(255,255,255,0.05);
+border:1px solid rgba(255,255,255,0.1);
+position: relative;
+overflow: hidden;
+z-index: 1;
+box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* DARK MODE GLOW */
+body.dark .glass {
+  background: rgba(0,0,0,0.6);
+  
+  /* subtle white glow (inside feel) */
+  box-shadow: 
+    inset 0 0 10px rgba(255,255,255,0.05),
+    0 4px 20px rgba(0,0,0,0.5);
+  
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* CARD SPECIAL GLOW */
+body.dark .card-box {
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    inset 0 0 8px rgba(255,255,255,0.04),
+    0 6px 25px rgba(0,0,0,0.6);
+}
+
+/* HOVER EFFECT */
+.glass:hover {
+  transform: translateY(-3px) scale(1.02);
+  transition: all 0.3s ease;
+}
+
+/* ================= GLASS SHINE ANIMATION ================= */
+.glass::before{
+content:"";
+position:absolute;
+top:-150%;
+left:-150%;
+width:300%;
+height:300%;
+background:linear-gradient(
+120deg,
+transparent 40%,
+rgba(255,255,255,0.12) 50%,
+transparent 60%
+);
+filter: blur(20px);
+transform: rotate(25deg);
+animation:glassMove 12s linear infinite;
+pointer-events: none;
+z-index: 0;
+}
+
+@keyframes glassMove{
+0%{
+transform:translate(-40%,-40%) rotate(25deg);
+}
+100%{
+transform:translate(40%,40%) rotate(25deg);
+}
+}
+
+/* ================= GRID BACKGROUND ================= */
+.grid-overlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background-size:40px 40px;
+pointer-events:none;
+z-index:-1;
+
+background-image:
+linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+}
+
+/* DARK GRID */
+.dark .grid-overlay{
+background-image:
+linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px),
+linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px);
+}
+
+/* ================= IMPORTANT FIXES ================= */
+
+/* ❌ REMOVE FULLSCREEN CANVAS ISSUE */
+canvas {
+  position: relative !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* OPTIONAL: smooth text fade */
+#loadingText {
+transition: opacity 0.3s ease;
+}
+.no-hover:hover {
+  transform: none !important;
+  box-shadow: inherit !important;
+}
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.admin-table th {
+    background: #111;
+    color: #fff;
+    padding: 12px;
+    text-align: left;
+}
+
+.admin-table td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* URL wrap */
+.url-cell {
+    max-width: 300px;
+    word-break: break-all;
+}
+
+/* Status badges */
+.status {
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.status.safe {
+    background: rgba(0,255,0,0.1);
+    color: #00ff88;
+}
+
+.status.suspicious {
+    background: rgba(255,165,0,0.1);
+    color: orange;
+}
+
+.status.phishing {
+    background: rgba(255,0,0,0.1);
+    color: red;
+}
+
+/* Buttons */
+.action-form {
+    display: flex;
+    gap: 6px;
+}
+
+.btn {
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.2s;
+}
+
+/* Button colors */
+.btn.safe {
+    background: #00c853;
+    color: white;
+}
+
+.btn.warn {
+    background: #ff9800;
+    color: white;
+}
+
+.btn.danger {
+    background: #ff1744;
+    color: white;
+}
+
+/* Hover */
+.btn:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+</style>
+
+</head>
+
+<body class="pt-20 bg-gray-100 text-black dark:bg-black dark:text-white">
+
+<div class="grid-overlay"></div>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="fixed top-0 left-0 w-full z-50 glass">
+<div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-3">
+<div class="flex items-center gap-3">
+<img src="{{ url_for('static', filename='url1.png') }}" class="w-8 h-8">
+
+<span class="text-xl font-bold text-black dark:text-white">
+URLIntel-Admin
+</span>
+</div>
+
+<div class="flex items-center gap-2 bg-white/40 dark:bg-white/10 backdrop-blur-md p-1 rounded-xl">
+
+<a href="/"
+class="px-4 py-2 rounded-lg
+hover:bg-gray-200
+dark:hover:bg-white/20
+transition">
+Home
+</a>
+
+<a href="/logout" class="px-4 py-2 bg-red-500 text-white rounded-lg">Logout</a>
+
+<button onclick="toggleTheme()"
+class="ml-6 p-2 rounded-lg bg-gray-200 dark:bg-gray-800"
+title="Toggle dark mode">
+
+<svg xmlns="http://www.w3.org/2000/svg"
+class="w-5 h-5 text-slate-800 dark:text-white"
+fill="none"
+viewBox="0 0 24 24"
+stroke="currentColor">
+
+<path stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M12 3v1m0 16v1m8.66-10h-1M4.34 12h-1m15.36 6.36l-.7-.7M6.34 6.34l-.7-.7m12.02 0l-.7.7M6.34 17.66l-.7.7M12 7a5 5 0 100 10 5 5 0 000-10z"/>
+
+</svg>
+
+</button>
+</div>
+
+</div>
+</nav>
+
+<!-- ================= MAIN CONTAINER ================= -->
+<div class="max-w-7xl mx-auto px-6 mt-10 space-y-10">
+
+<!-- ================= STATS ================= -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+<div class="glass card-box p-6 rounded-xl text-center h-[120px] flex flex-col justify-center">
+<h2 class="text-sm text-gray-500 dark:text-gray-300">Total URLs</h2>
+<p class="text-2xl font-bold mt-2">{{total}}</p>
+</div>
+
+<div class="glass card-box p-6 rounded-xl text-center h-[120px] flex flex-col justify-center">
+<h2 class="text-green-500">Safe</h2>
+<p class="text-2xl font-bold mt-2">{{safe}}</p>
+</div>
+
+<div class="glass card-box p-6 rounded-xl text-center h-[120px] flex flex-col justify-center">
+<h2 class="text-yellow-500">Suspicious</h2>
+<p class="text-2xl font-bold mt-2">{{suspicious}}</p>
+</div>
+
+<div class="glass card-box p-6 rounded-xl text-center h-[120px] flex flex-col justify-center">
+<h2 class="text-red-500">Phishing</h2>
+<p class="text-2xl font-bold mt-2">{{phishing}}</p>
+</div>
+
+</div>
+
+<!-- ================= CHART ================= -->
+<div class="flex justify-center">
+<div class="glass p-6 rounded-xl w-[320px] text-center">
+<h2 class="text-lg mb-4">Threat Distribution</h2>
+<canvas id="chart" width="220" height="220"></canvas>
+</div>
+</div>
+
+<!-- ================= DOWNLOAD ================= -->
+<div class="flex justify-center gap-4">
+<a href="/download/csv" class="px-4 py-2 bg-blue-500 text-white rounded-lg">
+Download CSV
+</a>
+
+<a href="/download/pdf" class="px-4 py-2 bg-green-500 text-white rounded-lg">
+Download PDF
+</a>
+</div>
+
+<!-- ================= TABLE ================= -->
+<div class="glass no-hover p-6 rounded-xl">
+
+<h2 class="text-xl mb-4">Scan History</h2>
+<p>Total scans: {{ scans|length }}</p>
+<div class="overflow-x-auto">
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>URL</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for scan in scans %}
+        <tr>
+            <td>{{ scan[0] }}</td>
+
+            <td class="url-cell">
+                {{ scan[1] }}
+            </td>
+
+            <td>
+                <span class="
+                    {% if scan[2] == 'Safe Website' %}status safe
+                    {% elif scan[2] == 'Suspicious Website' %}status suspicious
+                    {% else %}status phishing{% endif %}
+                ">
+                    {{ scan[2] }}
+                </span>
+            </td>
+
+            <td>
+                <form action="/mark" method="POST" class="action-form">
+                    <input type="hidden" name="id" value="{{ scan[0] }}">
+
+                    <button name="label" value="Safe Website" class="btn safe">Safe</button>
+                    <button name="label" value="Suspicious Website" class="btn warn">Suspicious</button>
+                    <button name="label" value="Phishing Website" class="btn danger">Malicious</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+</div>
+
+</div>
+
+<!-- ================= SCRIPT ================= -->
+<script>
+
+let myChart;
+
+function createChart() {
+
+  const isDark = document.documentElement.classList.contains("dark");
+
+  // destroy old chart (important)
+  if (myChart) {
+    myChart.destroy();
+  }
+
+  myChart = new Chart(document.getElementById("chart"), {
+    type: "pie",
+data: {
+  labels: ["Safe", "Suspicious", "Phishing"],   // ✅ order fixed
+  datasets: [{
+    data: [{{safe}}, {{suspicious}}, {{phishing}}],  // ✅ same order
+    backgroundColor: [
+      "#22c55e",   // Safe → green
+      "#facc15",   // Suspicious → yellow
+      "#ef4444"    // Phishing → red
+    ],
+    borderWidth: 1
+  }]
+},
+    options: {
+      responsive: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: isDark ? "white" : "black"
+          }
+        }
+      }
+    }
+  });
+}
+
+window.onload = () => {
+  createChart();
+};
+
+
+// Set default theme on page load
+const html = document.documentElement;
+const savedTheme = localStorage.getItem("theme");
+
+// If user has a saved theme, use it; otherwise default to dark
+if (savedTheme === "light") {
+  html.classList.remove("dark");
+} else {
+  // Default is dark
+  html.classList.add("dark");
+  localStorage.setItem("theme", "dark"); // optional: save default
+}
+
+// Then your toggle function
+function toggleTheme() {
+  html.classList.toggle("dark");
+
+  // Save theme
+  if (html.classList.contains("dark")) {
+    localStorage.setItem("theme", "dark");
+  } else {
+    localStorage.setItem("theme", "light");
+  }
+
+  // 🔥 Recreate chart (fix invisible bug)
+  createChart();
+}
+</script>
+
+</body>
+</html>

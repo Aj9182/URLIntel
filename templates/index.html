@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <title>URLIntel - AI URL Security</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='url1.png') }}">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+
+  <style>
+    .glass {
+      backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    body.dark .glass {
+      background: rgba(0, 0, 0, 0.6);
+      /* dark semi-transparent glass */
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.5),
+        0 0 40px rgba(0, 255, 255, 0.3),
+        0 0 60px rgba(0, 255, 255, 0.2);
+      /* soft glow */
+    }
+
+    /* Dark mode glow for cards */
+    body.dark .card-box {
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(0, 255, 255, 0.7);
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), 0 0 40px rgba(0, 255, 255, 0.2);
+    }
+
+    /* Optional: subtle hover pop for all glass boxes */
+    .glass:hover {
+      transform: translateY(-2px) scale(1.02);
+      transition: transform 0.3s;
+    }
+
+    /* diagonal glass reflection */
+    .glass::before {
+      content: "";
+      position: absolute;
+      top: -150%;
+      left: -150%;
+      width: 300%;
+      height: 300%;
+      background: linear-gradient(120deg,
+          transparent 40%,
+          rgba(255, 255, 255, 0.15) 50%,
+          transparent 60%);
+      filter: blur(20px);
+      transform: rotate(25deg);
+      animation: glassMove 10s linear infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes glassMove {
+      -5% {
+        transform: translate(-40%, -40%) rotate(25deg);
+      }
+
+      100% {
+        transform: translate(40%, 40%) rotate(25deg);
+      }
+    }
+
+    #particle-network {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+    }
+
+    /* grid like the website */
+
+    .grid-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* light mode grid */
+
+    .grid-overlay {
+      background-image:
+        linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    }
+
+    /* dark mode grid */
+
+    .dark .grid-overlay {
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    }
+
+    #loadingText {
+      transition: opacity 0.3s ease;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+  </style>
+
+</head>
+
+<body class="pt-24 bg-gray-100 text-slate-800 dark:bg-black dark:text-white">
+  <canvas id="particle-network"></canvas>
+  <div class="grid-overlay"></div>
+  <!-- NAVBAR -->
+
+  <nav class="fixed top-0 w-full z-50 glass flex justify-between items-center px-10 py-4">
+
+    <div class="flex items-center gap-3">
+
+      <img src="{{ url_for('static', filename='url1.png') }}" class="w-8 h-8">
+
+      <span class="text-xl font-bold text-black dark:text-white">
+        URLIntel
+      </span>
+
+    </div>
+
+
+    <!-- NAV MENU -->
+    <div class="flex items-center gap-2 bg-white/40 dark:bg-white/10 backdrop-blur-md p-1 rounded-xl">
+
+      <a href="/" class="px-4 py-2 rounded-lg
+bg-white text-black
+dark:bg-white dark:text-black
+font-medium
+transition">
+        Home
+      </a>
+
+      <a href="#features" class="px-4 py-2 rounded-lg
+hover:bg-gray-200
+dark:hover:bg-white/20
+transition">
+        Features
+      </a>
+
+      <a href="/history" class="px-4 py-2 rounded-lg
+hover:bg-gray-200
+dark:hover:bg-white/20
+transition">
+        History
+      </a>
+
+      <!-- Show Login or Logout depending on session -->
+      {% if session.get('username') %}
+      <a href="{{ url_for('logout') }}" class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition">
+        Logout
+      </a>
+      {% else %}
+      <a href="{{ url_for('login') }}"
+        class="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-semibold hover:from-cyan-500 hover:to-blue-600 transition">
+        Login
+      </a>
+      {% endif %}
+
+    </div>
+
+
+    <!-- THEME BUTTON -->
+
+    <button onclick="toggleTheme()" class="ml-6 p-2 rounded-lg bg-gray-200 dark:bg-gray-800">
+
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-slate-800 dark:text-white" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor">
+
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 3v1m0 16v1m8.66-10h-1M4.34 12h-1m15.36 6.36l-.7-.7M6.34 6.34l-.7-.7m12.02 0l-.7.7M6.34 17.66l-.7.7M12 7a5 5 0 100 10 5 5 0 000-10z" />
+
+      </svg>
+
+    </button>
+
+  </nav>
+
+
+  <!-- HERO BOX -->
+
+  <section class="flex justify-center px-6">
+
+    <div class="glass rounded-2xl p-10 max-w-5xl w-full text-center shadow-lg dark:shadow-none">
+
+      <img src="{{ url_for('static', filename='url1.png') }}" class="mx-auto w-14 mb-6">
+
+      <h1 class="text-4xl font-bold mb-4">
+
+        AI Powered<br>
+
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+
+          Phishing URL Detection
+
+        </span>
+
+      </h1>
+
+      <p class="text-gray-600 dark:text-gray-300 mb-8">
+
+        Analyze suspicious websites instantly.
+        Detect phishing, malicious redirects and SSL risks using AI.
+
+      </p>
+
+      <form action="/scan" method="POST" class="space-y-4">
+
+        <input type="text" name="url" required placeholder="Enter Website URL (example.com)"
+          class="w-full p-4 rounded-xl border bg-white dark:bg-black border-gray-300 dark:border-gray-700">
+
+        <button
+          class="w-full py-3 rounded-xl bg-white text-black dark:bg-gray-100 font-semibold shadow-lg dark:shadow-none">
+
+          Analyze URL
+
+        </button>
+
+      </form>
+
+    </div>
+
+  </section>
+
+  <!-- LOADING OVERLAY -->
+  <div id="loader" class="fixed inset-0 hidden items-center justify-center bg-black/70 backdrop-blur-lg z-50">
+
+    <div class="text-center text-white">
+
+      <!-- Spinner -->
+      <div class="relative w-20 h-20 mx-auto mb-6">
+        <div class="absolute inset-0 rounded-full border-4 border-cyan-500 animate-ping opacity-30"></div>
+        <div class="absolute inset-0 rounded-full border-4 border-t-cyan-400 animate-spin"></div>
+      </div>
+
+      <!-- Text -->
+      <p id="loadingText" class="text-lg font-semibold tracking-wide transition-opacity duration-300">
+        Initializing scan<span id="dots"></span>
+      </p>
+
+    </div>
+  </div>
+
+  <!-- STATUS CARDS -->
+
+  <section class="mt-10 px-6">
+
+    <div class="max-w-5xl mx-auto">
+
+      <div class="grid md:grid-cols-3 gap-8">
+
+        <div class="glass p-6 rounded-xl 
+            shadow-lg dark:shadow-none 
+            dark:border dark:border-green-500 font-roboto">
+          <h3 class="text-teal-400 font-semibold mb-2">AI Powered</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            ML model trained on phishing datasets to detect malicious websites instantly.
+          </p>
+        </div>
+
+        <div class="glass p-6 rounded-xl 
+            shadow-lg dark:shadow-none 
+            dark:border dark:border-blue-500">
+
+          <h3 class="text-blue-400 font-semibold mb-2">
+            Threat Analysis
+          </h3>
+
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Detects redirects and suspicious domains
+          </p>
+
+        </div>
+
+        <div class="glass p-6 rounded-xl 
+            shadow-lg dark:shadow-none 
+            dark:border dark:border-purple-500">
+
+          <h3 class="text-purple-400 font-semibold mb-2">
+            Instant Result
+          </h3>
+
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Threat score generated instantly
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- HOW IT WORKS -->
+
+  <section class="mt-20 px-6">
+
+    <div class="max-w-5xl mx-auto">
+
+      <div class="glass p-10 rounded-2xl shadow-lg dark:shadow-none">
+
+        <h2 class="text-3xl font-bold text-center mb-10">
+          How It Works
+        </h2>
+
+        <div class="grid md:grid-cols-3 gap-10 text-center">
+
+          <!-- STEP 1 -->
+
+          <div class="group transition-transform duration-300 hover:-translate-y-1">
+
+            <div class="bg-orange-500 text-white w-10 h-10 mx-auto rounded-md flex items-center justify-center mb-3
+transition-all duration-300
+group-hover:scale-110
+group-hover:shadow-[0_0_18px_rgba(249,115,22,0.8)]">
+
+              1
+
+            </div>
+
+            <h3 class="font-semibold">
+              Paste URL
+            </h3>
+
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              Enter the website you want to search
+            </p>
+
+          </div>
+
+
+          <!-- STEP 2 -->
+
+          <div class="group transition-transform duration-300 hover:-translate-y-1">
+
+            <div class="bg-blue-500 text-white w-10 h-10 mx-auto rounded-md flex items-center justify-center mb-3
+transition-all duration-300
+group-hover:scale-110
+group-hover:shadow-[0_0_18px_rgba(59,130,246,0.8)]">
+
+              2
+
+            </div>
+
+            <h3 class="font-semibold">
+              AI Analysis
+            </h3>
+
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              Our system extracts 35+ phishing features
+            </p>
+
+          </div>
+
+
+          <!-- STEP 3 -->
+
+          <div class="group transition-transform duration-300 hover:-translate-y-1">
+
+            <div class="bg-green-500 text-white w-10 h-10 mx-auto rounded-md flex items-center justify-center mb-3
+transition-all duration-300
+group-hover:scale-110
+group-hover:shadow-[0_0_18px_rgba(34,197,94,0.8)]">
+
+              3
+
+            </div>
+
+            <h3 class="font-semibold">
+              Get Result
+            </h3>
+
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              Receive phishing probability instantly
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- FEATURES -->
+
+  <section id="features" class="mt-20 px-6">
+
+    <div class="max-w-5xl mx-auto">
+
+      <h2 class="text-3xl font-bold text-center mb-10">
+        Why Choose URLIntel?
+      </h2>
+
+
+      <div class="grid md:grid-cols-3 gap-8">
+
+        <!-- CARD 1 -->
+        <div class="relative p-[1px] rounded-2xl
+bg-gradient-to-r from-green-400/40 via-green-500/20 to-transparent
+dark:hover:from-green-400 dark:hover:via-green-500
+transition duration-500
+dark:bg-gradient-to-r
+bg-black/10">
+
+          <div class="rounded-2xl p-8 text-center h-full
+bg-white shadow-lg
+dark:bg-black/80 dark:border dark:border-white/10
+backdrop-blur-xl
+transition-all duration-300
+hover:-translate-y-2 hover:scale-[1.03]">
+
+            <div class="w-14 h-14 mx-auto mb-6 flex items-center justify-center
+rounded-xl bg-green-500/20">
+
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-green-500 dark:text-green-400" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 7l9-4 9 4-9 4-9-4zm0 6l9 4 9-4m-18 0l9-4 9 4" />
+
+              </svg>
+
+            </div>
+
+            <h3 class="text-xl font-semibold mb-2 text-black dark:text-white">
+              AI Detection
+            </h3>
+
+            <p class="text-gray-600 dark:text-gray-400 text-sm">
+              Machine learning model trained on phishing datasets
+              to detect malicious websites instantly.
+            </p>
+
+          </div>
+        </div>
+
+
+        <!-- CARD 2 -->
+        <div class="relative p-[1px] rounded-2xl
+bg-gradient-to-r from-blue-400/40 via-blue-500/20 to-transparent
+dark:hover:from-blue-400 dark:hover:via-blue-500
+transition duration-500
+dark:bg-gradient-to-r
+bg-black/10">
+
+          <div class="rounded-2xl p-8 text-center h-full
+bg-white shadow-lg
+dark:bg-black/80 dark:border dark:border-white/10
+backdrop-blur-xl
+transition-all duration-300
+hover:-translate-y-2 hover:scale-[1.03]">
+
+            <div class="w-14 h-14 mx-auto mb-6 flex items-center justify-center
+rounded-xl bg-blue-500/20">
+
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-blue-500 dark:text-blue-400" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+
+                <circle cx="12" cy="12" r="10" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2" />
+
+              </svg>
+
+            </div>
+
+            <h3 class="text-xl font-semibold mb-2 text-black dark:text-white">
+              Lightning Fast
+            </h3>
+
+            <p class="text-gray-600 dark:text-gray-400 text-sm">
+              Optimized AI analysis delivers results in seconds
+              with minimal processing time.
+            </p>
+
+          </div>
+        </div>
+
+
+        <!-- CARD 3 -->
+        <div class="relative p-[1px] rounded-2xl
+bg-gradient-to-r from-purple-400/40 via-purple-500/20 to-transparent
+dark:hover:from-purple-400 dark:hover:via-purple-500
+transition duration-500
+dark:bg-gradient-to-r
+bg-black/10">
+
+          <div class="rounded-2xl p-8 text-center h-full
+bg-white shadow-lg
+dark:bg-black/80 dark:border dark:border-white/10
+backdrop-blur-xl
+transition-all duration-300
+hover:-translate-y-2 hover:scale-[1.03]">
+
+            <div class="w-14 h-14 mx-auto mb-6 flex items-center justify-center
+rounded-xl bg-purple-500/20">
+
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-purple-500 dark:text-purple-400" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 2l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-4z" />
+
+              </svg>
+
+            </div>
+
+            <h3 class="text-xl font-semibold mb-2 text-black dark:text-white">
+              Secure & Private
+            </h3>
+
+            <p class="text-gray-600 dark:text-gray-400 text-sm">
+              Your scanned URLs are not stored or tracked.
+              All analysis runs securely.
+            </p>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- STATS -->
+
+  <section class="mt-20 px-6">
+
+    <div class="max-w-5xl mx-auto">
+
+      <div class="glass p-10 rounded-2xl shadow-lg dark:shadow-none">
+
+        <div class="grid md:grid-cols-3 text-center gap-10">
+
+          <div>
+
+            <h3 class="text-3xl font-bold">
+              750K+
+            </h3>
+
+            <p class="text-gray-500">
+              URLs Analyzed
+            </p>
+
+          </div>
+
+          <div>
+
+            <h3 class="text-3xl font-bold">
+              35+
+            </h3>
+
+            <p class="text-gray-500">
+              URL Features
+            </p>
+
+          </div>
+
+          <div>
+
+            <h3 class="text-3xl font-bold">
+              97.8%
+            </h3>
+
+            <p class="text-gray-500">
+              Detection Accuracy
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <footer class="mt-16 px-6">
+
+    <div class="glass w-full py-6 text-center text-gray-500 dark:text-gray-400 rounded-xl">
+
+      © 2026 URLIntel | AI Powered URL Security System
+
+    </div>
+
+  </footer>
+
+
+  <script>
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle("dark");
+    }
+
+    /* detect system dark mode */
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+
+    const canvas = document.getElementById("particle-network");
+    const ctx = canvas.getContext("2d");
+
+    /* canvas size */
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    // run once
+    resizeCanvas();
+
+    // run on resize / zoom
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    let mouse = {
+      x: null,
+      y: null
+    };
+
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.x;
+      mouse.y = e.y;
+    });
+
+    window.addEventListener("mouseleave", () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+
+    let particles = [];
+    const count = 80;
+
+    function initParticles() {
+      particles = [];
+
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.6,
+          vy: (Math.random() - 0.5) * 0.6
+        });
+      }
+    }
+
+    /* create particles */
+
+    for (let i = 0; i < count; i++) {
+
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6
+      });
+
+    }
+
+    /* animation */
+
+    function draw() {
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      /* check theme */
+      const isDark = document.documentElement.classList.contains("dark");
+
+      /* colors */
+      const particleColor = isDark ? "#ffffff" : "#111827";
+      const lineColor = isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)";
+      /* move particles */
+
+      particles.forEach(p => {
+
+        // normal movement
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+        // 🖱️ MOUSE INTERACTION
+        if (mouse.x && mouse.y) {
+
+          let dx = p.x - mouse.x;
+          let dy = p.y - mouse.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 120 && dist !== 0) {
+
+            let force = (120 - dist) / 120;
+
+            // interaction (repel or attract)
+            p.x += (dx / dist) * force * 2;
+            p.y += (dy / dist) * force * 2;
+
+            // ✨ GLOW EFFECT START
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+
+            ctx.fillStyle = particleColor;
+
+            ctx.shadowBlur = 15;              // 🔥 glow strength
+            ctx.shadowColor = particleColor;  // glow color
+
+            ctx.fill();
+
+            ctx.shadowBlur = 0; // reset (VERY IMPORTANT)
+          }
+        }
+
+        // draw particle
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = particleColor;
+        ctx.fill();
+
+
+      });
+
+      /* connect nearby particles */
+
+      for (let i = 0; i < particles.length; i++) {
+
+        for (let j = i + 1; j < particles.length; j++) {
+
+          let dx = particles[i].x - particles[j].x;
+          let dy = particles[i].y - particles[j].y;
+
+          let dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 120) {
+
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+          }
+
+        }
+
+      }
+
+      requestAnimationFrame(draw);
+
+    }
+
+    draw();
+
+
+    let messageInterval;
+    let dotInterval;
+
+    const messages = [
+      "Initializing scan engine...",
+      "Parsing domain and structure...",
+      "Establishing secure connection...",
+      "Analyzing behavioral patterns...",
+      "Cross-checking threat intelligence...",
+      "Finalizing risk assessment..."
+    ];
+
+    function startLoader() {
+      let i = 0;
+      let dotCount = 0;
+
+      // Message animation
+      messageInterval = setInterval(() => {
+        const text = document.getElementById("loadingText");
+
+        if (!text) return;
+
+        text.style.opacity = 0;
+
+        setTimeout(() => {
+          if (i < messages.length) {
+            text.innerText = messages[i];
+            i++;
+          }
+          text.style.opacity = 1;
+        }, 300);
+
+      }, 1500);
+
+      // Dots animation
+      dotInterval = setInterval(() => {
+        const dots = document.getElementById("dots");
+
+        if (dots) {
+          dotCount = (dotCount + 1) % 4;
+          dots.innerText = ".".repeat(dotCount);
+        }
+      }, 500);
+    }
+
+    function stopLoader() {
+      clearInterval(messageInterval);
+      clearInterval(dotInterval);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const form = document.querySelector("form");
+      const loader = document.getElementById("loader");
+
+      if (form) {
+        form.addEventListener("submit", () => {
+
+          loader.classList.remove("hidden");
+          loader.classList.add("flex");
+
+          startLoader();
+
+          const btn = form.querySelector("button");
+          if (btn) {
+            btn.disabled = true;
+            btn.innerText = "Scanning...";
+          }
+        });
+      }
+
+      // Fix back button issue
+      window.addEventListener("pageshow", () => {
+        stopLoader();
+
+        if (loader) {
+          loader.classList.add("hidden");
+          loader.classList.remove("flex");
+        }
+      });
+
+    });
+
+  </script>
+
+</body>
+
+</html>

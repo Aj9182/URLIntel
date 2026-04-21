@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URLIntel - Security Report</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='url1.png') }}">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class' }
+</script>
+
+<style>
+/* GLASS EFFECT */
+.glass {
+  backdrop-filter: blur(20px);
+  border-radius: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* LIGHT MODE */
+body:not(.dark) .glass {
+  background: rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  color: #111;
+}
+
+/* DARK MODE */
+body.dark .glass {
+  background: rgba(0,0,0,0.6);
+  border:1px solid rgba(0,255,255,0.5);
+  box-shadow: 0 0 20px rgba(0,255,255,0.4),
+              0 0 40px rgba(0,255,255,0.3);
+  color: #fff;
+}
+
+/* NAVBAR LINK COLORS */
+.nav-link {
+  transition: color 0.3s;
+}
+body:not(.dark) .nav-link { color: #111; }
+body.dark .nav-link { color: #fff; }
+
+/* INPUT & BUTTON */
+input, button {
+  backdrop-filter: blur(15px);
+  transition: all 0.3s;
+}
+input {
+  border-radius: 1rem;
+  border:1px solid rgba(0,0,0,0.1);
+}
+body.dark input {
+  border:1px solid rgba(0,255,255,0.4);
+  color: #fff;
+}
+
+/* HOVER POP */
+.glass:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* CARD HOVER */
+.card-box:hover {
+  transform: translateY(-2px) scale(1.03);
+  transition: transform 0.3s;
+}
+
+/* FORCE DARK TEXT ON ALL CARDS */
+body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6,
+body.dark p, body.dark li, body.dark span {
+  color: #fff !important;
+}
+.glass::before{
+content:"";
+position:absolute;
+top:-150%;
+left:-150%;
+width:300%;
+height:300%;
+background:linear-gradient(
+120deg,
+transparent 40%,
+rgba(255,255,255,0.15) 50%,
+transparent 60%
+);
+filter: blur(20px);
+transform: rotate(25deg);
+animation:glassMove 10s linear infinite;
+pointer-events: none;
+  z-index: 1; 
+}
+
+@keyframes glassMove{
+-5%{
+transform:translate(-40%,-40%) rotate(25deg);
+}
+100%{
+transform:translate(40%,40%) rotate(25deg);
+}
+}
+#particle-network{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:-2;
+}
+
+.grid-overlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background-size:40px 40px;
+pointer-events:none;
+z-index:-1;
+}
+
+.grid-overlay{
+background-image:
+linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+}
+
+.dark .grid-overlay{
+background-image:
+linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px),
+linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px);
+}
+</style>
+</head>
+
+<body class="bg-gray-100 dark:bg-black text-slate-800 dark:text-white transition-colors duration-500">
+<!-- PARTICLES -->
+<canvas id="particle-network"></canvas>
+
+<!-- GRID -->
+<div class="grid-overlay"></div>
+<!-- NAVBAR -->
+<nav class="fixed top-0 w-full z-50 glass flex justify-between items-center px-10 py-4">
+
+  <!-- LOGO -->
+  <div class="flex items-center gap-3">
+    <img src="{{ url_for('static', filename='url1.png') }}" class="w-8 h-8">
+    <span class="text-xl font-bold text-black dark:text-white">URLIntel</span>
+  </div>
+
+<!-- NAV MENU -->
+<div class="flex items-center gap-2 bg-white/40 dark:bg-white/10 backdrop-blur-md p-1 rounded-xl">
+
+    <a href="/"
+       class="px-4 py-2 rounded-lg
+              font-medium
+              transition
+              hover:bg-gray-200 dark:hover:bg-white/20
+              text-black dark:text-white">
+      Home
+    </a>
+
+    <a href="/scan"
+       class="px-4 py-2 rounded-lg
+              bg-white text-black dark:bg-white dark:text-black
+              font-medium
+              transition
+              hover:bg-gray-200 dark:hover:bg-white/20">
+      Result
+    </a>
+
+    <a href="/history"
+       class="px-4 py-2 rounded-lg
+              font-medium
+              transition
+              hover:bg-gray-200 dark:hover:bg-white/20
+              text-black dark:text-white">
+      History
+    </a>
+        <a href="/admin"
+       class="px-4 py-2 rounded-lg
+              font-medium
+              transition
+              hover:bg-gray-200 dark:hover:bg-white/20
+              text-black dark:text-white">
+      Admin
+    </a>
+
+</div>
+
+</div>
+
+  <!-- THEME BUTTON -->
+  <button onclick="toggleTheme()"
+    class="ml-6 p-2 rounded-lg bg-gray-200 dark:bg-gray-800">
+
+    <svg xmlns="http://www.w3.org/2000/svg"
+      class="w-5 h-5 text-slate-800 dark:text-white"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor">
+
+      <path stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 3v1m0 16v1m8.66-10h-1M4.34 12h-1m15.36 6.36l-.7-.7M6.34 6.34l-.7-.7m12.02 0l-.7.7M6.34 17.66l-.7.7M12 7a5 5 0 100 10 5 5 0 000-10z"/>
+
+    </svg>
+
+  </button>
+
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="pt-28 px-6 pb-10">
+  <div class="glass max-w-5xl mx-auto p-10 rounded-2xl shadow-2xl">
+
+<!-- HEADER -->
+<div class="flex justify-between items-center mb-8">
+  <h1 class="text-3xl font-bold text-black dark:text-white">URL Security Analysis</h1>
+<span class="text-sm px-3 py-1 rounded-full bg-gray-200 dark:bg-gray-700 dark:text-white shadow-lg dark:shadow-none">
+  AI Risk Assessment Engine
+</span>
+</div>
+
+    <!-- SCANNED URL + BUTTON -->
+    <div class="glass p-6 rounded-2xl mb-10 flex flex-col md:flex-row justify-between items-center gap-6 shadow-inner">
+      <div>
+        <p class="text-sm dark:text-gray-300">Scanned URL</p>
+        <p class="break-all font-semibold text-lg dark:text-white">{{ url }}</p>
+      </div>
+      <button onclick="handleRedirect()"
+        class="flex items-center gap-2 px-8 py-3 rounded-xl font-semibold shadow-lg hover:scale-105 hover:-translate-y-1
+        {% if threat_score < 30 %} bg-gradient-to-r from-green-500 to-emerald-600
+        {% elif threat_score < 70 %} bg-gradient-to-r from-yellow-400 to-orange-500
+        {% else %} bg-gradient-to-r from-red-500 to-rose-600 {% endif %}">
+        Visit Website
+      </button>
+    </div>
+    <!-- VIEW SECURITY BUTTON -->
+  <button onclick="openSSLModal()"
+  class="-mt-8 px-4 py-2 rounded-lg font-medium transition-all duration-300
+  text-black bg-white shadow-md
+  hover:shadow-xl hover:-translate-y-1 hover:scale-105
+  dark:text-white dark:bg-transparent dark:shadow-none dark:hover:shadow-none">
+  View Security Details
+  </button>
+
+  <button onclick="openWhoisModal()"
+  class="-mt-8 ml-3 px-4 py-2 rounded-lg font-medium transition-all duration-300
+  text-black bg-white shadow-md
+  hover:shadow-xl hover:-translate-y-1 hover:scale-105
+  dark:text-white dark:bg-transparent dark:shadow-none">
+
+  View WHOIS Info
+
+</button>
+<div class="mt-8 p-4 rounded-xl bg-white/70 dark:bg-white/5 backdrop-blur-lg shadow-lg">
+
+  <p class="text-gray-800 dark:text-white">
+    <span class="font-semibold text-gray-900 dark:text-white">IP Address:</span>
+    {{ ip_address }}
+  </p>
+
+  <p class="text-gray-800 dark:text-white">
+    <span class="font-semibold text-gray-900 dark:text-white">Location:</span>
+    {{ ip_info.country }}, {{ ip_info.city }}
+  </p>
+
+  <p class="text-gray-800 dark:text-white">
+    <span class="font-semibold text-gray-900 dark:text-white">ISP:</span>
+    {{ ip_info.isp }}
+  </p>
+
+</div>
+    <!-- SECURITY METER -->
+    <div class="mt-8 mb-10">
+      <p class="text-sm text-gray-500 dark:text-gray-300 mb-3">Overall URL Security</p>
+      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-6 overflow-hidden">
+        <div class="h-6 rounded-full transition-all duration-700
+          {% if threat_score < 30 %} bg-gradient-to-r from-green-400 to-emerald-600
+          {% elif threat_score < 70 %} bg-gradient-to-r from-yellow-400 to-orange-500
+          {% else %} bg-gradient-to-r from-red-500 to-rose-600 {% endif %}"
+          style="width: {{ threat_score }}%">
+        </div>
+      </div>
+      <div class="text-center mt-3 text-lg font-bold
+        {% if threat_score < 30 %} text-green-600
+        {% elif threat_score < 70 %} text-yellow-600
+        {% else %} text-red-600 {% endif %}">
+        {{ threat_score }}%
+      </div>
+    </div>
+
+    <!-- SECURITY LEVEL -->
+    <div class="mb-10">
+      {% if threat_score < 30 %}
+        <div class="p-6 bg-green-50 dark:bg-green-900 border border-green-300 rounded-2xl shadow-sm">
+          <h2 class="text-xl font-bold text-green-700 dark:text-green-300">Normal / Safe Website</h2>
+          <p class="mt-2 text-green-600 dark:text-green-200">No major phishing indicators detected. Domain appears trustworthy.</p>
+        </div>
+      {% elif threat_score < 70 %}
+        <div class="p-6 bg-yellow-50 dark:bg-yellow-900 border border-yellow-300 rounded-2xl shadow-sm">
+          <h2 class="text-xl font-bold text-yellow-700 dark:text-yellow-300">Suspicious Website</h2>
+          <p class="mt-2 text-yellow-700 dark:text-yellow-200">Some risk indicators found. Proceed with caution.</p>
+        </div>
+      {% else %}
+        <div class="p-6 bg-red-50 dark:bg-red-900 border border-red-300 rounded-2xl shadow-sm">
+          <h2 class="text-xl font-bold text-red-700 dark:text-red-300">Dangerous / Phishing Risk</h2>
+          <p class="mt-2 text-red-700 dark:text-red-200">Strong phishing or malicious indicators detected. Avoid interaction.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- URL INSIGHTS -->
+    <h2 class="text-xl font-semibold mb-6 dark:text-white">URL Insights</h2>
+    <div class="glass p-4 rounded-xl mb-6 text-sm">
+
+<div class="text-gray-700 dark:text-gray-200 space-y-2 text-sm">
+
+  <p class="flex items-center gap-2">
+    
+    <!-- Minimal Dot Icon -->
+    <span class="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+    
+    <span class="font-medium">Subdomain:</span>
+    {{ subdomain if subdomain else "None" }}
+  </p>
+
+  <p class="flex items-center gap-2">
+    
+    <!-- Minimal Dot Icon -->
+    <span class="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+    
+    <span class="font-medium">Main Domain:</span>
+    {{ main_domain }}
+  </p>
+
+</div>
+
+</div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div class="glass p-6 rounded-2xl text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-300">Redirect Count</p>
+        <p class="font-bold text-2xl dark:text-white mt-2">{{ redirect_count }}</p>
+      </div>
+      <div class="glass p-6 rounded-2xl text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-300">Domain Changed</p>
+        <p class="font-bold text-2xl dark:text-white mt-2">{% if domain_changed %}Yes ⚠{% else %}No{% endif %}</p>
+      </div>
+      <div class="glass p-6 rounded-2xl text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-300">Risk Category</p>
+        <p class="font-bold text-2xl dark:text-white mt-2">
+          {% if threat_score < 30 %} Low Risk
+          {% elif threat_score < 70 %} Medium Risk
+          {% else %} High Risk {% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- RECOMMENDATIONS -->
+    <h2 class="text-xl font-semibold mb-6 dark:text-white">Safety Recommendations</h2>
+    <ul class="list-disc list-inside space-y-3 mb-10 dark:text-white">
+      {% if threat_score < 30 %}
+        <li>Website appears safe for browsing.</li>
+        <li>Ensure URL spelling is correct.</li>
+        <li>Keep browser security enabled.</li>
+      {% elif threat_score < 70 %}
+        <li>Do not enter passwords or OTPs immediately.</li>
+        <li>Verify domain authenticity before login.</li>
+        <li>Check for HTTPS certificate lock in browser.</li>
+        <li>Avoid downloading unknown files.</li>
+      {% else %}
+        <li>Do NOT enter personal or banking information.</li>
+        <li>Do NOT click on login or payment buttons.</li>
+        <li>Close the website immediately.</li>
+        <li>Report suspicious site to authorities.</li>
+        <li>Enable antivirus and browser protection.</li>
+      {% endif %}
+    </ul>
+
+<!-- ACTION BUTTON -->
+<div class="text-center">
+  <a href="/"
+     class="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl shadow-lg hover:scale-105 transition transform">
+
+    <!-- SVG Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg"
+         class="w-5 h-5"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor">
+      <circle cx="11" cy="11" r="7" stroke-width="2"></circle>
+      <line x1="20" y1="20" x2="16.5" y2="16.5" stroke-width="2" stroke-linecap="round"></line>
+    </svg>
+
+    Scan Another URL
+  </a>
+</div>
+
+  </div>
+</div>
+
+<script>
+function handleRedirect() {
+  const url = "{{ url }}";
+  const threat = {{ threat_score }};
+
+  if (threat < 40) {
+    window.open(url, "_blank");
+  } else if (threat >= 40 && threat < 70) {
+    if (confirm("⚠ This website may be suspicious.\nProceed with caution.\nDo you want to continue?")) {
+      window.open(url, "_blank");
+    }
+  } else {
+    alert("🚫 This website is highly suspicious and has been blocked for your safety.");
+    window.location.href = "https://www.google.com";
+  }
+}
+
+function toggleTheme() {
+  document.documentElement.classList.toggle('dark');
+}
+
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.classList.add('dark');
+}
+const canvas = document.getElementById("particle-network");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+const count = 80;
+
+for(let i=0;i<count;i++){
+
+particles.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+vx:(Math.random()-0.5)*0.6,
+vy:(Math.random()-0.5)*0.6
+})
+
+}
+
+function draw(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+const isDark=document.documentElement.classList.contains("dark");
+
+const particleColor=isDark?"white":"#111827";
+const lineColor=isDark?"rgba(255,255,255,0.25)":"rgba(0,0,0,0.15)";
+
+particles.forEach(p=>{
+
+p.x+=p.vx;
+p.y+=p.vy;
+
+if(p.x<0||p.x>canvas.width)p.vx*=-1;
+if(p.y<0||p.y>canvas.height)p.vy*=-1;
+
+ctx.beginPath();
+ctx.arc(p.x,p.y,2,0,Math.PI*2);
+ctx.fillStyle=particleColor;
+ctx.fill();
+
+});
+
+for(let i=0;i<particles.length;i++){
+for(let j=i+1;j<particles.length;j++){
+
+let dx=particles[i].x-particles[j].x;
+let dy=particles[i].y-particles[j].y;
+
+let dist=Math.sqrt(dx*dx+dy*dy);
+
+if(dist<120){
+
+ctx.beginPath();
+ctx.moveTo(particles[i].x,particles[i].y);
+ctx.lineTo(particles[j].x,particles[j].y);
+ctx.strokeStyle=lineColor;
+ctx.stroke();
+
+}
+
+}
+}
+
+requestAnimationFrame(draw);
+
+}
+
+draw();
+function openSSLModal(){
+  document.getElementById("sslModal").classList.remove("hidden");
+  document.getElementById("sslModal").classList.add("flex");
+}
+
+function closeSSLModal(){
+  document.getElementById("sslModal").classList.add("hidden");
+}
+function openWhoisModal(){
+  document.getElementById("whoisModal").classList.remove("hidden");
+  document.getElementById("whoisModal").classList.add("flex");
+}
+
+function closeWhoisModal(){
+  document.getElementById("whoisModal").classList.add("hidden");
+}
+</script>
+<!-- SSL MODAL -->
+<div id="sslModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+
+  <div class="glass p-8 rounded-2xl max-w-md w-full relative">
+
+    <!-- CLOSE BUTTON -->
+    <button onclick="closeSSLModal()"
+  class="absolute top-4 right-4 p-2 rounded-full 
+  bg-white/20 dark:bg-white/10 backdrop-blur-md
+  shadow-md hover:shadow-lg hover:scale-110
+  hover:bg-white/30 dark:hover:bg-white/20
+  transition duration-300">
+
+  <svg xmlns="http://www.w3.org/2000/svg"
+       class="w-4 h-4 text-black dark:text-white"
+       fill="none"
+       viewBox="0 0 24 24"
+       stroke="currentColor">
+    <path stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12" />
+  </svg>
+
+</button>
+
+    <!-- HEADER -->
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-green-400 text-xl"></span>
+      <h2 class="text-lg font-semibold mb-2 text-black dark:text-white break-all">URL  :  {{ domain }}</h2>
+    </div>
+
+    <!-- STATUS -->
+    <p class="text-green-400 font-medium mb-4">
+      {{ ssl_status }}
+    </p>
+
+    <!-- DETAILS -->
+    <div class="text-sm space-y-2 text-gray-300">
+
+      <p><strong>Issued by:</strong> {{ ssl_issuer }}</p>
+
+      <p><strong>Issued on:</strong> {{ ssl_issued }}</p>
+
+      <p><strong>Expires on:</strong> {{ ssl_expiry }}</p>
+
+      <p><strong>SHA-256:</strong></p>
+      <p class="break-all text-xs">{{ ssl_fingerprint }}</p>
+
+    </div>
+
+  </div>
+
+</div>
+<div id="whoisModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+
+  <div class="glass p-8 rounded-2xl max-w-md w-full relative">
+
+    <!-- CLOSE BUTTON -->
+    <button onclick="closeWhoisModal()"
+  class="absolute top-4 right-4 p-2 rounded-full 
+  bg-white/20 dark:bg-white/10 backdrop-blur-md
+  shadow-md hover:shadow-lg hover:scale-110
+  hover:bg-white/30 dark:hover:bg-white/20
+  transition duration-300">
+
+  <svg xmlns="http://www.w3.org/2000/svg"
+       class="w-4 h-4 text-black dark:text-white"
+       fill="none"
+       viewBox="0 0 24 24"
+       stroke="currentColor">
+    <path stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12" />
+  </svg>
+
+</button>
+
+    <h2 class="text-lg font-semibold mb-4 text-black dark:text-white">
+      WHOIS Information
+    </h2>
+
+    <div class="text-sm space-y-2 text-gray-700 dark:text-gray-300">
+
+      <p><strong>Domain:</strong> {{ whois.domain }}</p>
+      <p><strong>Registrar:</strong> {{ whois.registrar }}</p>
+      <p><strong>Created:</strong> {{ whois.creation_date }}</p>
+      <p><strong>Expires:</strong> {{ whois.expiry_date }}</p>
+
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

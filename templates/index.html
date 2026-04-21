@@ -126,6 +126,42 @@
       height: 100%;
       z-index: -1;
     }
+
+    /* ===== MOBILE HAMBURGER NAV ===== */
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      padding: 6px;
+      background: none;
+      border: none;
+      color: inherit;
+    }
+    .nav-hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: currentColor;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    .nav-menu-mobile {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      padding: 0 16px 12px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .nav-menu-mobile.open {
+      display: flex;
+    }
+    @media (max-width: 768px) {
+      .nav-hamburger { display: flex; }
+      .nav-links-desktop { display: none !important; }
+      body { padding-top: 5rem; }
+    }
   </style>
 
 </head>
@@ -135,73 +171,55 @@
   <div class="grid-overlay"></div>
   <!-- NAVBAR -->
 
-  <nav class="fixed top-0 w-full z-50 glass flex justify-between items-center px-10 py-4">
+  <nav class="fixed top-0 w-full z-50 glass" id="mainNav">
+    <div class="flex justify-between items-center px-6 py-4">
 
-    <div class="flex items-center gap-3">
+      <!-- LOGO -->
+      <div class="flex items-center gap-3">
+        <img src="{{ url_for('static', filename='url1.png') }}" class="w-8 h-8">
+        <span class="text-xl font-bold text-black dark:text-white">URLIntel</span>
+      </div>
 
-      <img src="{{ url_for('static', filename='url1.png') }}" class="w-8 h-8">
+      <div class="flex items-center gap-2">
+        <!-- NAV LINKS (desktop) -->
+        <div class="nav-links-desktop flex items-center gap-2 bg-white/40 dark:bg-white/10 backdrop-blur-md p-1 rounded-xl">
+          <a href="/" class="px-4 py-2 rounded-lg bg-white text-black dark:bg-white dark:text-black font-medium transition">Home</a>
+          <a href="#features" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/20 transition">Features</a>
+          <a href="/history" class="px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/20 transition">History</a>
+          {% if session.get('username') %}
+          <a href="{{ url_for('logout') }}" class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition">Logout</a>
+          {% else %}
+          <a href="{{ url_for('login') }}" class="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-semibold hover:from-cyan-500 hover:to-blue-600 transition">Login</a>
+          {% endif %}
+        </div>
 
-      <span class="text-xl font-bold text-black dark:text-white">
-        URLIntel
-      </span>
+        <!-- THEME BUTTON -->
+        <button onclick="toggleTheme()" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-800">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-slate-800 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-10h-1M4.34 12h-1m15.36 6.36l-.7-.7M6.34 6.34l-.7-.7m12.02 0l-.7.7M6.34 17.66l-.7.7M12 7a5 5 0 100 10 5 5 0 000-10z" />
+          </svg>
+        </button>
 
+        <!-- HAMBURGER (mobile only) -->
+        <button class="nav-hamburger text-black dark:text-white" id="hamburger" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
     </div>
 
-
-    <!-- NAV MENU -->
-    <div class="flex items-center gap-2 bg-white/40 dark:bg-white/10 backdrop-blur-md p-1 rounded-xl">
-
-      <a href="/" class="px-4 py-2 rounded-lg
-bg-white text-black
-dark:bg-white dark:text-black
-font-medium
-transition">
-        Home
-      </a>
-
-      <a href="#features" class="px-4 py-2 rounded-lg
-hover:bg-gray-200
-dark:hover:bg-white/20
-transition">
-        Features
-      </a>
-
-      <a href="/history" class="px-4 py-2 rounded-lg
-hover:bg-gray-200
-dark:hover:bg-white/20
-transition">
-        History
-      </a>
-
-      <!-- Show Login or Logout depending on session -->
+    <!-- MOBILE DROPDOWN MENU -->
+    <div id="mobileMenu" class="nav-menu-mobile">
+      <a href="/" class="block px-4 py-2 rounded-lg bg-white text-black dark:bg-white dark:text-black font-medium">Home</a>
+      <a href="#features" class="block px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/20 transition" onclick="toggleMobileMenu()">Features</a>
+      <a href="/history" class="block px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-white/20 transition">History</a>
       {% if session.get('username') %}
-      <a href="{{ url_for('logout') }}" class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition">
-        Logout
-      </a>
+      <a href="{{ url_for('logout') }}" class="block px-4 py-2 rounded-lg bg-red-500 text-white">Logout</a>
       {% else %}
-      <a href="{{ url_for('login') }}"
-        class="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-semibold hover:from-cyan-500 hover:to-blue-600 transition">
-        Login
-      </a>
+      <a href="{{ url_for('login') }}" class="block px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-semibold">Login</a>
       {% endif %}
-
     </div>
-
-
-    <!-- THEME BUTTON -->
-
-    <button onclick="toggleTheme()" class="ml-6 p-2 rounded-lg bg-gray-200 dark:bg-gray-800">
-
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-slate-800 dark:text-white" fill="none"
-        viewBox="0 0 24 24" stroke="currentColor">
-
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M12 3v1m0 16v1m8.66-10h-1M4.34 12h-1m15.36 6.36l-.7-.7M6.34 6.34l-.7-.7m12.02 0l-.7.7M6.34 17.66l-.7.7M12 7a5 5 0 100 10 5 5 0 000-10z" />
-
-      </svg>
-
-    </button>
-
   </nav>
 
 
@@ -626,6 +644,10 @@ rounded-xl bg-purple-500/20">
 
     function toggleTheme() {
       document.documentElement.classList.toggle("dark");
+    }
+
+    function toggleMobileMenu() {
+      document.getElementById('mobileMenu').classList.toggle('open');
     }
 
     /* detect system dark mode */
